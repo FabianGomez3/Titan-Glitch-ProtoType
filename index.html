@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Titan Glitch Prototype</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css?v=5" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="game-wrap" aria-label="Titan Glitch game prototype">
+        <canvas id="game" width="1280" height="720"></canvas>
+        <div class="scanlines"></div>
+        <div class="reticle" aria-hidden="true"></div>
+        <div id="menuPanel" class="menu-panel">
+          <div class="menu-copy">
+            <h1>Titan Glitch</h1>
+            <p>Look if you dare</p>
+          </div>
+          <nav class="main-menu" aria-label="Main menu">
+            <button id="soloButton" type="button">Play Solo</button>
+            <button id="multiplayerButton" type="button">Play Multiplayer</button>
+            <button id="settingsButton" type="button">Game Settings</button>
+            <button id="quitButton" type="button">Quit</button>
+          </nav>
+        </div>
+        <div id="lobbyPanel" class="lobby-panel is-hidden">
+          <header class="lobby-header">
+            <div>
+              <h1>Titan Glitch</h1>
+              <p>Multiplayer Lobby</p>
+            </div>
+            <div class="lobby-code">
+              <span>Lobby Code</span>
+              <strong>TG-4821</strong>
+            </div>
+          </header>
+          <div class="lobby-grid">
+            <section class="lobby-card players-card">
+              <h2>Players (3/6)</h2>
+              <div class="player-row host">
+                <span class="avatar">P1</span>
+                <div><strong>Player1</strong><small>Host</small></div>
+                <em>Ready</em>
+              </div>
+              <div class="player-row">
+                <span class="avatar">P2</span>
+                <div><strong>Player2</strong><small>member</small></div>
+                <em class="not-ready">Not Ready</em>
+              </div>
+              <div class="player-row">
+                <span class="avatar">P3</span>
+                <div><strong>Player3</strong><small>member</small></div>
+                <em>Ready</em>
+              </div>
+              <div class="player-row empty">
+                <span class="avatar">--</span>
+                <div><strong>Waiting for player...</strong></div>
+              </div>
+            </section>
+            <section class="lobby-card settings-card">
+              <h2>Game Settings</h2>
+              <dl>
+                <dt>Starting Level</dt>
+                <dd>Level 0 - Tutorial</dd>
+                <dt>Game Mode</dt>
+                <dd>Cooperative</dd>
+                <dt>Map</dt>
+                <dd>Pollak Library</dd>
+                <dt>Proximity Chat</dt>
+                <dd class="enabled">Enabled</dd>
+                <dt>Max Players</dt>
+                <dd>6</dd>
+              </dl>
+            </section>
+            <section class="lobby-card chat-card">
+              <h2>Lobby Chat</h2>
+              <p><b>Player1:</b> everyone ready?</p>
+              <p><b>Player3:</b> ready when u are</p>
+              <p><b>Player2:</b> give me a sec</p>
+              <p><b>Player1:</b> no rush</p>
+              <label>
+                <span>Message</span>
+                <input type="text" placeholder="Type a message..." />
+              </label>
+            </section>
+          </div>
+          <footer class="lobby-actions">
+            <button id="leaveLobbyButton" type="button">Leave Lobby</button>
+            <p>Waiting for all players to ready up...</p>
+            <button id="startLobbyButton" type="button">Start Game</button>
+          </footer>
+        </div>
+        <div id="outcomePanel" class="outcome-panel is-hidden" aria-live="polite">
+          <div class="outcome-shell">
+            <p id="outcomeBrand" class="outcome-brand">Titan Glitch</p>
+            <h1 id="outcomeTitle">You Escaped</h1>
+            <p id="outcomeSubtitle">The glitch has been defeated. You made it out.</p>
+            <div id="failureReason" class="failure-reason is-hidden">
+              <strong>What Went Wrong</strong>
+              <span>You reported <b>No Anomaly</b> but a <b>NO SIGNAL Monitor</b> anomaly was present on Floor 2.</span>
+            </div>
+            <div class="outcome-stats">
+              <div>
+                <span>Total Time</span>
+                <strong id="statTime">00:00</strong>
+                <small>minutes</small>
+              </div>
+              <div>
+                <span id="statTwoLabel">Anomalies Found</span>
+                <strong id="statTwoValue">1/1</strong>
+                <small id="statTwoSub">correct</small>
+              </div>
+              <div>
+                <span id="statThreeLabel">Resets</span>
+                <strong id="statThreeValue">0</strong>
+                <small id="statThreeSub">total</small>
+              </div>
+              <div>
+                <span>Accuracy</span>
+                <strong id="statAccuracy">100%</strong>
+                <small>detection rate</small>
+              </div>
+            </div>
+            <div id="levelBreakdown" class="level-breakdown">
+              <h2>Level Breakdown</h2>
+              <div>
+                <span>L0</span><em>✓</em>
+                <span>L1</span><em>✓</em>
+                <span>L2</span><em>✓</em>
+                <span>L3</span><em>✓</em>
+                <span>L4</span><em>✓</em>
+                <span>L5</span><em>✓</em>
+                <span>L6</span><em>✓</em>
+              </div>
+            </div>
+            <div id="failureTip" class="failure-tip is-hidden">
+              <strong>Tip</strong>
+              <span>Use your flashlight and scan computer monitors for impossible status messages.</span>
+            </div>
+            <div class="outcome-actions">
+              <button id="outcomeMenuButton" type="button">Return to Menu</button>
+              <button id="outcomeRetryButton" type="button">Play Again</button>
+            </div>
+          </div>
+        </div>
+        <aside class="hud hud-left">
+          <div>
+            <span>Location</span>
+            <strong id="locationLabel">Pollak Library</strong>
+          </div>
+          <div>
+            <span>Floor</span>
+            <strong id="floorLabel">First Floor</strong>
+          </div>
+          <div>
+            <span>Lives</span>
+            <strong id="livesLabel">3</strong>
+          </div>
+          <div>
+            <span>Battery</span>
+            <strong id="batteryLabel">100%</strong>
+          </div>
+        </aside>
+        <aside class="hud hud-right">
+          <div>
+            <span>Streak</span>
+            <strong id="streakLabel">0</strong>
+          </div>
+          <div>
+            <span>Accuracy</span>
+            <strong id="accuracyLabel">--</strong>
+          </div>
+          <div>
+            <span>Session</span>
+            <strong id="timerLabel">00:00</strong>
+          </div>
+          <div>
+            <span>Tool</span>
+            <strong id="toolLabel">Flashlight off</strong>
+          </div>
+        </aside>
+        <div class="hud-hint">Tab: HUD</div>
+        <div id="prompt" class="prompt">Choose Play Solo or enter the lobby.</div>
+        <div id="targetLabel" class="target-label"></div>
+        <div class="controls">
+          <button id="reportButton" type="button">Report Glitch</button>
+          <button id="clearButton" type="button">No Anomaly</button>
+          <button id="resetButton" type="button">Reset</button>
+        </div>
+      </section>
+      <section class="brief">
+        <div>
+          <h2>Prototype Loop</h2>
+          <p>
+            This demo focuses on one classroom-ready loop: travel through Pollak
+            Library, find the wrong floor-number anomaly, and report it.
+          </p>
+        </div>
+        <div>
+          <h2>Controls</h2>
+          <p>
+            Move with WASD or arrow keys. Turn with mouse, Q/E, or left/right
+            arrows. Press F for flashlight, hold right click for magnifying
+            inspection, Shift to run, G to report an anomaly, and C to clear a
+            normal floor.
+          </p>
+        </div>
+      </section>
+    </main>
+    <script src="./game.js?v=5"></script>
+  </body>
+</html>
