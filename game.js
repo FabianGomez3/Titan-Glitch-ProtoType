@@ -31,6 +31,10 @@ const ui = {
   statAccuracy: document.getElementById("statAccuracy"),
   outcomeMenuButton: document.getElementById("outcomeMenuButton"),
   outcomeRetryButton: document.getElementById("outcomeRetryButton"),
+  settingsPanel: document.getElementById("settingsPanel"),
+  settingsBackButton: document.getElementById("settingsBackButton"),
+  settingsSaveButton: document.getElementById("settingsSaveButton"),
+  settingsResetButton: document.getElementById("settingsResetButton"),
   prompt: document.getElementById("prompt"),
   targetLabel: document.getElementById("targetLabel"),
   reportButton: document.getElementById("reportButton"),
@@ -1471,10 +1475,12 @@ function loop(now) {
 function setScreen(screen) {
   state.screen = screen;
   ui.wrap.classList.toggle("menu-mode", screen === "menu");
+  ui.wrap.classList.toggle("settings-mode", screen === "settings");
   ui.wrap.classList.toggle("lobby-mode", screen === "lobby");
   ui.wrap.classList.toggle("outcome-mode", screen === "outcome");
   ui.wrap.classList.toggle("hud-collapsed", screen === "game" && !state.hudVisible);
   ui.menuPanel.classList.toggle("is-hidden", screen !== "menu");
+   ui.settingsPanel.classList.toggle("is-hidden", screen !== "settings");
   ui.lobbyPanel.classList.toggle("is-hidden", screen !== "lobby");
   ui.outcomePanel.classList.toggle("is-hidden", screen !== "outcome");
 }
@@ -1547,8 +1553,13 @@ activate(ui.multiplayerButton, () => {
   state.running = false;
   setScreen("lobby");
 });
-activate(ui.settingsButton, () => {
-  setPrompt("Settings placeholder: flashlight, sensitivity, and audio sliders would live here.", 2600);
+activate(ui.settingsButton, () => setScreen("settings"));
+activate(ui.settingsBackButton, () => setScreen("menu"));
+activate(ui.settingsSaveButton, () => setScreen("menu"));
+activate(ui.settingsResetButton, () => {
+  ui.settingsMessage = document.getElementById("settingsMessage");
+  ui.settingsMessage.textContent = "Settings reset to defaults.";
+  setTimeout(() => { ui.settingsMessage.textContent = ""; }, 1800);
 });
 activate(ui.quitButton, () => {
   setPrompt("Quit is disabled in the browser prototype.", 2200);
