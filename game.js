@@ -3,7 +3,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const libraryScene = new Image();
-libraryScene.src = "./assets/pollak-library-second-floor.png";
+libraryScene.src = "./assets/pollak-library-first-floor.png";
 
 const ui = {
   wrap: document.querySelector(".game-wrap"),
@@ -80,8 +80,24 @@ const floors = [
   {
     name: "Pollak Library",
     floor: "First Floor",
+    image: "./assets/pollak-library-first-floor.png",
+    signText: "POLLAK 1F",
+    expectedPanel: "FLOOR 1",
+    hasAnomaly: false,
+    anomalyPanel: "FLOOR 8",
     accent: "#70e4ff",
     normal: "Normal Pollak Library first floor: floor markers should read FLOOR 1.",
+  },
+  {
+    name: "Pollak Library",
+    floor: "Second Floor",
+    image: "./assets/pollak-library-second-floor.png",
+    signText: "POLLAK 2F",
+    expectedPanel: "FLOOR 2",
+    hasAnomaly: true,
+    anomalyPanel: "FLOOR B4",
+    accent: "#c5ef6f",
+    normal: "Normal Pollak Library second floor: floor markers should read FLOOR 2.",
   },
 ];
 
@@ -89,10 +105,10 @@ const anomalyTypes = [
   {
     id: "wrong-floor",
     label: "Wrong Floor Number",
-    description: "The elevator panel near the glass study room says FLOOR 8 instead of FLOOR 1.",
-    apply(objects) {
+    description: "The elevator panel near the glass study room shows the wrong floor number.",
+    apply(objects, floor) {
       const sign = objects.find((object) => object.id === "elevator-panel");
-      sign.text = "FLOOR 8";
+      sign.text = floor.anomalyPanel;
       sign.color = "#ff556a";
       sign.scale = 1.42;
       sign.anomaly = true;
@@ -144,9 +160,9 @@ function makeSprite(id, gx, gy, text, color, kind, scale = 1, anomaly = false) {
 
 function buildBaseObjects(floor) {
   return [
-    makeSprite("entrance-sign", 2.5, 11.5, "POLLAK 1F", floor.accent, "sign", 1.18),
-    makeSprite("directory", 8.5, 10.8, "DIRECTORY", "#70e4ff", "sign", 1.05),
-    makeSprite("elevator-panel", 12.8, 10.9, "FLOOR 1", "#70e4ff", "sign", 1.16),
+    makeSprite("entrance-sign", 2.5, 11.5, floor.signText, floor.accent, "sign", 1.18),
+    makeSprite("directory", 8.5, 10.8, "DIRECTORY", floor.accent, "sign", 1.05),
+    makeSprite("elevator-panel", 12.8, 10.9, floor.expectedPanel, floor.accent, "sign", 1.16),
     makeSprite("poster-titans", 3.4, 2.6, "TITANS", "#f6c751", "poster", 0.95),
     makeSprite("poster-csuf", 5.6, 2.6, "CSUF", "#70e4ff", "poster", 0.95),
     makeSprite("poster-library", 7.8, 2.6, "QUIET ZONE", "#a688ff", "poster", 0.92),
@@ -171,6 +187,7 @@ function resetRun() {
 
 function startFloor() {
   const floor = floors[state.floorIndex];
+  libraryScene.src = floor.image;
   state.player.x = 160;
   state.player.y = 720;
   state.player.angle = -Math.PI / 2;
@@ -179,9 +196,16 @@ function startFloor() {
   state.sceneZoom = 1;
   state.botAlert = false;
   state.objects = buildBaseObjects(floor);
-  state.currentAnomaly = anomalyTypes[0];
-  state.currentAnomaly.apply(state.objects);
-  setPrompt("Demo goal: travel through Pollak Library and report the one anomaly. Look for a floor sign that does not belong.", 6200);
+  state.currentAnomaly = floor.hasAnomaly ? anomalyTypes[0] : null;
+  if (state.currentAnomaly) {
+    state.currentAnomaly.apply(state.objects, floor);
+  }
+  setPrompt(
+    floor.hasAnomaly
+      ? `${floor.floor}: report the one anomaly. Look for a floor sign that does not belong.`
+      : `${floor.floor}: no anomaly is present. Clear the floor when it looks normal.`,
+    6200
+  );
 
   updateHud();
 }
@@ -1374,12 +1398,19 @@ function updateBot(dt) {
 function reportDecision(hasAnomalyDecision) {
   if (!state.running) return;
   state.attempts += 1;
-  const correct = hasAnomalyDecision;
+  const floor = floors[state.floorIndex];
+  const correct = hasAnomalyDecision === floor.hasAnomaly;
 
   if (correct) {
     state.correct += 1;
     state.streak += 1;
-    showOutcome("victory");
+    if (state.floorIndex < floors.length - 1) {
+      state.floorIndex += 1;
+      setPrompt("Correct. Moving to the next floor.", 2400);
+      setTimeout(startFloor, 1000);
+    } else {
+      showOutcome("victory");
+    }
   } else {
     showOutcome("defeat");
   }
@@ -1402,10 +1433,10 @@ function showOutcome(type) {
     : "You failed to identify the anomaly. The run has been reset.";
   ui.statTime.textContent = `${mins}:${secs}`;
   ui.statTwoLabel.textContent = type === "victory" ? "Anomalies Found" : "Streak Lost";
-  ui.statTwoValue.textContent = type === "victory" ? "1/1" : "1";
+  ui.statTwoValue.textContent = type === "victory" ? `${state.correct}/${floors.length}` : "1";
   ui.statTwoSub.textContent = type === "victory" ? "correct" : "reset to 0";
   ui.statThreeLabel.textContent = type === "victory" ? "Resets" : "Failed On";
-  ui.statThreeValue.textContent = type === "victory" ? "0" : "Floor 2";
+  ui.statThreeValue.textContent = type === "victory" ? "0" : floors[state.floorIndex].floor;
   ui.statThreeSub.textContent = type === "victory" ? "total" : "Pollak Library";
   ui.statAccuracy.textContent = type === "victory" ? "100%" : "0%";
   ui.outcomeRetryButton.textContent = type === "victory" ? "Play Again" : "Try Again";
