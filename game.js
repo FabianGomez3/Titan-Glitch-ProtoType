@@ -11,6 +11,7 @@ const ui = {
   lobbyPanel: document.getElementById("lobbyPanel"),
   soloButton: document.getElementById("soloButton"),
   multiplayerButton: document.getElementById("multiplayerButton"),
+  scanButton: document.getElementById("scanButton"),
   settingsButton: document.getElementById("settingsButton"),
   quitButton: document.getElementById("quitButton"),
   leaveLobbyButton: document.getElementById("leaveLobbyButton"),
@@ -31,6 +32,20 @@ const ui = {
   statAccuracy: document.getElementById("statAccuracy"),
   outcomeMenuButton: document.getElementById("outcomeMenuButton"),
   outcomeRetryButton: document.getElementById("outcomeRetryButton"),
+  settingsPanel: document.getElementById("settingsPanel"),
+  settingsBackButton: document.getElementById("settingsBackButton"),
+  settingsSaveButton: document.getElementById("settingsSaveButton"),
+  settingsResetButton: document.getElementById("settingsResetButton"),
+  settingsMessage: document.getElementById("settingsMessage"),
+  scanPanel: document.getElementById("scanPanel"),
+  scanMask: document.getElementById("scanMask"),
+  scanHotspot: document.getElementById("scanHotspot"),
+  scanPopup: document.getElementById("scanPopup"),
+  scanReportButton: document.getElementById("scanReportButton"),
+  scanContinueButton: document.getElementById("scanContinueButton"),
+  scanFound: document.getElementById("scanFound"),
+  scanAgainButton: document.getElementById("scanAgainButton"),
+  scanMenuButton: document.getElementById("scanMenuButton"),
   prompt: document.getElementById("prompt"),
   targetLabel: document.getElementById("targetLabel"),
   reportButton: document.getElementById("reportButton"),
@@ -80,8 +95,24 @@ const floors = [
   {
     name: "Pollak Library",
     floor: "First Floor",
+    image: "./assets/pollak-library-second-floor.png",
+    signText: "POLLAK 1F",
+    expectedPanel: "FLOOR 1",
+    hasAnomaly: false,
     accent: "#70e4ff",
     normal: "Normal Pollak Library first floor: floor markers should read FLOOR 1.",
+  },
+  {
+    name: "Pollak Library",
+    floor: "Second Floor",
+    image: "./assets/pollak-library-second-floor.png",
+    signText: "POLLAK 2F",
+    expectedPanel: "FLOOR 2",
+    hasAnomaly: true,
+    anomalyLabel: "NO SIGNAL Monitor",
+    anomalyText: "NO SIGNAL",
+    accent: "#c5ef6f",
+    normal: "Normal Pollak Library second floor: monitors should show normal desktop activity.",
   },
 ];
 
@@ -89,10 +120,10 @@ const anomalyTypes = [
   {
     id: "wrong-floor",
     label: "Wrong Floor Number",
-    description: "The elevator panel near the glass study room says FLOOR 8 instead of FLOOR 1.",
-    apply(objects) {
+    description: "The elevator panel near the glass study room shows the wrong floor number.",
+    apply(objects, floor) {
       const sign = objects.find((object) => object.id === "elevator-panel");
-      sign.text = "FLOOR 8";
+      sign.text = floor.anomalyText || "FLOOR 8";
       sign.color = "#ff556a";
       sign.scale = 1.42;
       sign.anomaly = true;
@@ -144,9 +175,9 @@ function makeSprite(id, gx, gy, text, color, kind, scale = 1, anomaly = false) {
 
 function buildBaseObjects(floor) {
   return [
-    makeSprite("entrance-sign", 2.5, 11.5, "POLLAK 1F", floor.accent, "sign", 1.18),
-    makeSprite("directory", 8.5, 10.8, "DIRECTORY", "#70e4ff", "sign", 1.05),
-    makeSprite("elevator-panel", 12.8, 10.9, "FLOOR 1", "#70e4ff", "sign", 1.16),
+    makeSprite("entrance-sign", 2.5, 11.5, floor.signText, floor.accent, "sign", 1.18),
+    makeSprite("directory", 8.5, 10.8, "DIRECTORY", floor.accent, "sign", 1.05),
+    makeSprite("elevator-panel", 12.8, 10.9, floor.expectedPanel, floor.accent, "sign", 1.16),
     makeSprite("poster-titans", 3.4, 2.6, "TITANS", "#f6c751", "poster", 0.95),
     makeSprite("poster-csuf", 5.6, 2.6, "CSUF", "#70e4ff", "poster", 0.95),
     makeSprite("poster-library", 7.8, 2.6, "QUIET ZONE", "#a688ff", "poster", 0.92),
@@ -171,6 +202,7 @@ function resetRun() {
 
 function startFloor() {
   const floor = floors[state.floorIndex];
+  libraryScene.src = floor.image;
   state.player.x = 160;
   state.player.y = 720;
   state.player.angle = -Math.PI / 2;
@@ -179,9 +211,16 @@ function startFloor() {
   state.sceneZoom = 1;
   state.botAlert = false;
   state.objects = buildBaseObjects(floor);
-  state.currentAnomaly = anomalyTypes[0];
-  state.currentAnomaly.apply(state.objects);
-  setPrompt("Demo goal: travel through Pollak Library and report the one anomaly. Look for a floor sign that does not belong.", 6200);
+  state.currentAnomaly = floor.hasAnomaly ? anomalyTypes[0] : null;
+  if (state.currentAnomaly) {
+    state.currentAnomaly.apply(state.objects, floor);
+  }
+  setPrompt(
+    floor.hasAnomaly
+      ? `${floor.floor}: report the anomaly. Look for a corrupted monitor or sign.`
+      : `${floor.floor}: no anomaly is present. Clear the floor when it looks normal.`,
+    6200
+  );
 
   updateHud();
 }
@@ -252,6 +291,9 @@ function drawImageBasedLibraryScene() {
 }
 
 function drawSceneAnomalyOverlay(offsetX, offsetY, scale) {
+  const floor = floors[state.floorIndex];
+  if (!floor.hasAnomaly) return;
+
   const w = canvas.width;
   const h = canvas.height;
   const anomaly = {
@@ -269,7 +311,7 @@ function drawSceneAnomalyOverlay(offsetX, offsetY, scale) {
   const distanceFromCrosshair = Math.hypot(cx - w / 2, cy - h / 2);
 
   if (distanceFromCrosshair < Math.max(70, sw * 0.8)) {
-    state.target = { anomaly: true, text: "NO SIGNAL" };
+    state.target = { anomaly: true, text: floor.anomalyText || "NO SIGNAL" };
   }
 
   if (state.target) {
@@ -763,7 +805,7 @@ function drawLibraryDarkness(scale, cameraX, cameraY) {
 }
 
 function drawNearbyPrompt() {
-  ui.targetLabel.textContent = state.target ? "FLOOR 8 - report this anomaly" : "";
+  ui.targetLabel.textContent = state.target ? `${state.target.text} - report this anomaly` : "";
   ui.targetLabel.classList.toggle("is-visible", Boolean(state.target));
 }
 
@@ -1374,12 +1416,19 @@ function updateBot(dt) {
 function reportDecision(hasAnomalyDecision) {
   if (!state.running) return;
   state.attempts += 1;
-  const correct = hasAnomalyDecision;
+  const floor = floors[state.floorIndex];
+  const correct = hasAnomalyDecision === floor.hasAnomaly;
 
   if (correct) {
     state.correct += 1;
     state.streak += 1;
-    showOutcome("victory");
+    if (state.floorIndex < floors.length - 1) {
+      state.floorIndex += 1;
+      setPrompt("Correct. Moving to the next floor.", 2400);
+      setTimeout(startFloor, 1000);
+    } else {
+      showOutcome("victory");
+    }
   } else {
     showOutcome("defeat");
   }
@@ -1396,16 +1445,23 @@ function showOutcome(type) {
   ui.failureReason.classList.toggle("is-hidden", type !== "defeat");
   ui.failureTip.classList.toggle("is-hidden", type !== "defeat");
   ui.levelBreakdown.classList.toggle("is-hidden", type === "defeat");
+  if (type === "defeat") {
+    const floor = floors[state.floorIndex];
+    const reason = floor.hasAnomaly
+      ? `You cleared the floor while a ${floor.anomalyLabel || "glitch"} was present on ${floor.floor}.`
+      : `You reported an anomaly, but ${floor.floor} was normal.`;
+    ui.failureReason.querySelector("span").textContent = reason;
+  }
   ui.outcomeTitle.textContent = type === "victory" ? "You Escaped" : "The Glitch Got You";
   ui.outcomeSubtitle.textContent = type === "victory"
     ? "The glitch has been defeated. You made it out."
     : "You failed to identify the anomaly. The run has been reset.";
   ui.statTime.textContent = `${mins}:${secs}`;
-  ui.statTwoLabel.textContent = type === "victory" ? "Anomalies Found" : "Streak Lost";
-  ui.statTwoValue.textContent = type === "victory" ? "1/1" : "1";
+  ui.statTwoLabel.textContent = type === "victory" ? "Floor Checks" : "Streak Lost";
+  ui.statTwoValue.textContent = type === "victory" ? `${state.correct}/${floors.length}` : "1";
   ui.statTwoSub.textContent = type === "victory" ? "correct" : "reset to 0";
   ui.statThreeLabel.textContent = type === "victory" ? "Resets" : "Failed On";
-  ui.statThreeValue.textContent = type === "victory" ? "0" : "Floor 2";
+  ui.statThreeValue.textContent = type === "victory" ? "0" : floors[state.floorIndex].floor;
   ui.statThreeSub.textContent = type === "victory" ? "total" : "Pollak Library";
   ui.statAccuracy.textContent = type === "victory" ? "100%" : "0%";
   ui.outcomeRetryButton.textContent = type === "victory" ? "Play Again" : "Try Again";
@@ -1461,6 +1517,8 @@ function loop(now) {
     drawMenuScene();
   } else if (state.screen === "lobby") {
     drawLobbyScene();
+  } else if (state.screen === "settings" || state.screen === "scan") {
+    drawMenuScene();
   } else {
     drawWorld();
     updateHud();
@@ -1471,12 +1529,19 @@ function loop(now) {
 function setScreen(screen) {
   state.screen = screen;
   ui.wrap.classList.toggle("menu-mode", screen === "menu");
+  ui.wrap.classList.toggle("settings-mode", screen === "settings");
+  ui.wrap.classList.toggle("scan-mode", screen === "scan");
   ui.wrap.classList.toggle("lobby-mode", screen === "lobby");
   ui.wrap.classList.toggle("outcome-mode", screen === "outcome");
   ui.wrap.classList.toggle("hud-collapsed", screen === "game" && !state.hudVisible);
   ui.menuPanel.classList.toggle("is-hidden", screen !== "menu");
+  ui.settingsPanel.classList.toggle("is-hidden", screen !== "settings");
+  ui.scanPanel.classList.toggle("is-hidden", screen !== "scan");
   ui.lobbyPanel.classList.toggle("is-hidden", screen !== "lobby");
   ui.outcomePanel.classList.toggle("is-hidden", screen !== "outcome");
+  if (screen === "scan") {
+    startScanScene();
+  }
 }
 
 function startGame() {
@@ -1488,6 +1553,61 @@ function startGame() {
     if (lockRequest?.catch) lockRequest.catch(() => {});
   }
   resetRun();
+}
+
+const scanState = {
+  x: -999,
+  y: -999,
+  frame: null,
+};
+
+function sizeScanMask() {
+  const ratio = window.devicePixelRatio || 1;
+  const bounds = ui.scanPanel.getBoundingClientRect();
+  ui.scanMask.width = Math.max(1, Math.floor(bounds.width * ratio));
+  ui.scanMask.height = Math.max(1, Math.floor(bounds.height * ratio));
+}
+
+function drawScanMask() {
+  if (state.screen !== "scan") return;
+  const mask = ui.scanMask;
+  const maskCtx = mask.getContext("2d");
+  const ratio = window.devicePixelRatio || 1;
+  maskCtx.clearRect(0, 0, mask.width, mask.height);
+  maskCtx.fillStyle = "rgba(0, 0, 0, 0.72)";
+  maskCtx.fillRect(0, 0, mask.width, mask.height);
+
+  const x = scanState.x * ratio;
+  const y = scanState.y * ratio;
+  const radius = 160 * ratio;
+  const gradient = maskCtx.createRadialGradient(x, y, 0, x, y, radius);
+  gradient.addColorStop(0, "rgba(0, 0, 0, 1)");
+  gradient.addColorStop(0.62, "rgba(0, 0, 0, 0.7)");
+  gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+  maskCtx.globalCompositeOperation = "destination-out";
+  maskCtx.fillStyle = gradient;
+  maskCtx.beginPath();
+  maskCtx.arc(x, y, radius, 0, Math.PI * 2);
+  maskCtx.fill();
+  maskCtx.globalCompositeOperation = "source-over";
+  scanState.frame = requestAnimationFrame(drawScanMask);
+}
+
+function startScanScene() {
+  state.running = false;
+  ui.scanFound.classList.add("is-hidden");
+  ui.scanPopup.classList.remove("is-visible");
+  scanState.x = -999;
+  scanState.y = -999;
+  sizeScanMask();
+  cancelAnimationFrame(scanState.frame);
+  drawScanMask();
+}
+
+function stopScanScene() {
+  cancelAnimationFrame(scanState.frame);
+  ui.scanPopup.classList.remove("is-visible");
 }
 
 window.addEventListener("keydown", (event) => {
@@ -1547,8 +1667,18 @@ activate(ui.multiplayerButton, () => {
   state.running = false;
   setScreen("lobby");
 });
-activate(ui.settingsButton, () => {
-  setPrompt("Settings placeholder: flashlight, sensitivity, and audio sliders would live here.", 2600);
+activate(ui.scanButton, () => setScreen("scan"));
+activate(ui.settingsButton, () => setScreen("settings"));
+activate(ui.settingsBackButton, () => setScreen("menu"));
+activate(ui.settingsSaveButton, () => {
+  ui.settingsMessage.textContent = "Settings saved for this prototype session.";
+  setTimeout(() => setScreen("menu"), 650);
+});
+activate(ui.settingsResetButton, () => {
+  ui.settingsMessage.textContent = "Settings reset to defaults.";
+  setTimeout(() => {
+    ui.settingsMessage.textContent = "";
+  }, 1800);
 });
 activate(ui.quitButton, () => {
   setPrompt("Quit is disabled in the browser prototype.", 2200);
@@ -1561,11 +1691,43 @@ activate(ui.reportButton, () => reportDecision(true));
 activate(ui.clearButton, () => reportDecision(false));
 activate(ui.resetButton, resetRun);
 
+ui.scanPanel.addEventListener("pointermove", (event) => {
+  const bounds = ui.scanPanel.getBoundingClientRect();
+  scanState.x = event.clientX - bounds.left;
+  scanState.y = event.clientY - bounds.top;
+});
+
+ui.scanPanel.addEventListener("pointerdown", (event) => {
+  if (event.target !== ui.scanHotspot) {
+    ui.scanPopup.classList.remove("is-visible");
+  }
+});
+
+activate(ui.scanHotspot, (event) => {
+  const bounds = ui.scanPanel.getBoundingClientRect();
+  const x = scanState.x > 0 ? scanState.x : bounds.width * 0.44;
+  const y = scanState.y > 0 ? scanState.y : bounds.height * 0.32;
+  ui.scanPopup.style.left = `${x}px`;
+  ui.scanPopup.style.top = `${y}px`;
+  ui.scanPopup.classList.add("is-visible");
+});
+activate(ui.scanReportButton, () => {
+  ui.scanPopup.classList.remove("is-visible");
+  ui.scanFound.classList.remove("is-hidden");
+});
+activate(ui.scanContinueButton, () => ui.scanPopup.classList.remove("is-visible"));
+activate(ui.scanAgainButton, startScanScene);
+activate(ui.scanMenuButton, () => {
+  stopScanScene();
+  setScreen("menu");
+});
+
 window.addEventListener("resize", () => {
   const ratio = window.devicePixelRatio || 1;
   const bounds = canvas.getBoundingClientRect();
   canvas.width = Math.max(960, Math.floor(bounds.width * ratio));
   canvas.height = Math.max(540, Math.floor(bounds.height * ratio));
+  if (state.screen === "scan") sizeScanMask();
 });
 
 window.dispatchEvent(new Event("resize"));

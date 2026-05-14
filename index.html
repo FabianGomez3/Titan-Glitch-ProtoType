@@ -21,9 +21,88 @@
           <nav class="main-menu" aria-label="Main menu">
             <button id="soloButton" type="button">Play Solo</button>
             <button id="multiplayerButton" type="button">Play Multiplayer</button>
+            <button id="scanButton" type="button">Anomaly Scan</button>
             <button id="settingsButton" type="button">Game Settings</button>
             <button id="quitButton" type="button">Quit</button>
           </nav>
+        </div>
+        <div id="settingsPanel" class="settings-panel is-hidden">
+          <div class="settings-shell">
+            <header class="settings-header">
+              <div>
+                <h1>Titan Glitch</h1>
+                <p>Game Settings</p>
+              </div>
+              <button id="settingsBackButton" type="button">Back to Menu</button>
+            </header>
+            <div class="settings-grid">
+              <section class="settings-card">
+                <h2>Audio</h2>
+                <div class="setting-row"><label>Master Volume</label><span>80%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:80%"></div></div>
+                <div class="setting-row"><label>Ambient Sound</label><span>60%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:60%"></div></div>
+                <div class="setting-row"><label>Proximity Chat Volume</label><span>100%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:100%"></div></div>
+                <div class="toggle-row"><label>Proximity Chat</label><div class="toggle on"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><label>Mute All Audio</label><div class="toggle off"><div class="toggle-knob"></div></div></div>
+              </section>
+              <section class="settings-card">
+                <h2>Controls</h2>
+                <div class="setting-row"><label>Mouse Sensitivity</label><span>50%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:50%"></div></div>
+                <div class="toggle-row"><label>Invert Y Axis</label><div class="toggle off"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><label>Sprint Toggle</label><div class="toggle on"><div class="toggle-knob"></div></div></div>
+                <div class="setting-row"><label>Flashlight Sensitivity</label><span>65%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:65%"></div></div>
+              </section>
+              <section class="settings-card">
+                <h2>Graphics</h2>
+                <div class="setting-row"><label>Brightness</label><span>70%</span></div>
+                <div class="slider-track"><div class="slider-fill" style="width:70%"></div></div>
+                <div class="toggle-row"><label>Scanlines Effect</label><div class="toggle on"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><label>Vignette Effect</label><div class="toggle on"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><label>HUD Visibility</label><div class="toggle on"><div class="toggle-knob"></div></div></div>
+              </section>
+              <section class="settings-card">
+                <h2>Keybind Reference</h2>
+                <div class="keybind-row"><span>Move</span><kbd>WASD / Arrows</kbd></div>
+                <div class="keybind-row"><span>Sprint</span><kbd>Shift</kbd></div>
+                <div class="keybind-row"><span>Turn</span><kbd>Q / E</kbd></div>
+                <div class="keybind-row"><span>Flashlight</span><kbd>F</kbd></div>
+                <div class="keybind-row"><span>Magnify</span><kbd>Right Click</kbd></div>
+                <div class="keybind-row"><span>Report Anomaly</span><kbd>G</kbd></div>
+                <div class="keybind-row"><span>No Anomaly</span><kbd>C</kbd></div>
+                <div class="keybind-row"><span>Toggle HUD</span><kbd>Tab</kbd></div>
+              </section>
+            </div>
+            <footer class="settings-footer">
+              <p id="settingsMessage" class="settings-message" aria-live="polite"></p>
+              <button id="settingsResetButton" type="button">Reset to Defaults</button>
+              <button id="settingsSaveButton" type="button">Save Settings</button>
+            </footer>
+          </div>
+        </div>
+        <div id="scanPanel" class="scan-panel is-hidden">
+          <canvas id="scanMask"></canvas>
+          <div class="scan-scene">
+            <img src="./TitanGlitchAnomalyDetection/TitanGlitchScene.png" alt="Titan Glitch anomaly scan scene" />
+            <img class="scan-anomaly" src="./TitanGlitchAnomalyDetection/TuffyAnomaly.png" alt="" />
+            <button id="scanHotspot" class="scan-hotspot" type="button" aria-label="Inspect anomaly"></button>
+          </div>
+          <div id="scanPopup" class="scan-popup">
+            <p>Anomaly detected. Report this anomaly?</p>
+            <div>
+              <button id="scanReportButton" type="button">Report</button>
+              <button id="scanContinueButton" type="button">Keep Searching</button>
+            </div>
+          </div>
+          <div id="scanFound" class="scan-found is-hidden">
+            <h1>Anomaly Reported</h1>
+            <p>Corrupted mascot data logged.</p>
+            <button id="scanAgainButton" type="button">Scan Again</button>
+            <button id="scanMenuButton" type="button">Return to Menu</button>
+          </div>
         </div>
         <div id="lobbyPanel" class="lobby-panel is-hidden">
           <header class="lobby-header">
@@ -99,7 +178,7 @@
             <p id="outcomeSubtitle">The glitch has been defeated. You made it out.</p>
             <div id="failureReason" class="failure-reason is-hidden">
               <strong>What Went Wrong</strong>
-              <span>You reported <b>No Anomaly</b> but a <b>NO SIGNAL Monitor</b> anomaly was present on Floor 2.</span>
+              <span>You cleared the floor while an anomaly was present.</span>
             </div>
             <div class="outcome-stats">
               <div>
