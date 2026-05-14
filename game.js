@@ -22,6 +22,7 @@ const ui = {
   failureReason: document.getElementById("failureReason"),
   failureTip: document.getElementById("failureTip"),
   levelBreakdown: document.getElementById("levelBreakdown"),
+  levelBreakdownItems: document.getElementById("levelBreakdownItems"),
   statTime: document.getElementById("statTime"),
   statTwoLabel: document.getElementById("statTwoLabel"),
   statTwoValue: document.getElementById("statTwoValue"),
@@ -1465,7 +1466,22 @@ function showOutcome(type) {
   ui.statThreeSub.textContent = type === "victory" ? "total" : "Pollak Library";
   ui.statAccuracy.textContent = type === "victory" ? "100%" : "0%";
   ui.outcomeRetryButton.textContent = type === "victory" ? "Play Again" : "Try Again";
+  renderLevelBreakdown();
   setScreen("outcome");
+}
+
+function renderLevelBreakdown() {
+  ui.levelBreakdownItems.replaceChildren();
+  floors.forEach((floor, index) => {
+    const label = document.createElement("span");
+    label.textContent = `F${index + 1}`;
+
+    const status = document.createElement("em");
+    status.textContent = "✓";
+    status.title = floor.floor;
+
+    ui.levelBreakdownItems.append(label, status);
+  });
 }
 
 function advanceFloor() {
